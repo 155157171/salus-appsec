@@ -192,15 +192,13 @@ async function analysisHandlers(rl, mode) {
     console.log(chalk.hex('#FF3333')(`  ◆  Processo finalizado.\n`));
 }
 // ── Config Handler ────────────────────────────────────────────────
-async function handleConfig() {
-    console.log('');
+async function handleConfig(rl) {
     try {
-        await configCommand();
+        await configCommand(rl);
     }
     catch (err) {
         console.log(chalk.hex('#FF0000')(`  ╳  ${err.message}`));
     }
-    console.log('');
 }
 // ── REPL Engine ───────────────────────────────────────────────────
 export async function startREPL() {
@@ -255,10 +253,8 @@ export async function startREPL() {
                     return;
                 }
                 if (['/config', '/c'].includes(line)) {
-                    rl.close();
-                    await new Promise(r => rl.on('close', r));
-                    await handleConfig();
-                    resolve('restart');
+                    await handleConfig(rl);
+                    rl.prompt();
                     return;
                 }
                 if (line.startsWith('/')) {

@@ -232,14 +232,12 @@ async function analysisHandlers(
 
 // ── Config Handler ────────────────────────────────────────────────
 
-async function handleConfig(): Promise<void> {
-  console.log('');
+async function handleConfig(rl: readline.Interface): Promise<void> {
   try {
-    await configCommand();
+    await configCommand(rl);
   } catch (err) {
     console.log(chalk.hex('#FF0000')(`  ╳  ${(err as Error).message}`));
   }
-  console.log('');
 }
 
 // ── REPL Engine ───────────────────────────────────────────────────
@@ -307,10 +305,8 @@ export async function startREPL(): Promise<void> {
         }
 
         if (['/config', '/c'].includes(line)) {
-          rl.close();
-          await new Promise<void>(r => rl.on('close', r));
-          await handleConfig();
-          resolve('restart');
+          await handleConfig(rl);
+          rl.prompt();
           return;
         }
 

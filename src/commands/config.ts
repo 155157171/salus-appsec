@@ -17,16 +17,16 @@ const MODELS = [
   { name: 'o3-mini', value: 'o3-mini' },
 ];
 
-export async function configCommand(): Promise<void> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+export async function configCommand(existingRl?: readline.Interface): Promise<void> {
+  const ownRl = !existingRl;
+  const rl = existingRl || readline.createInterface({ input: process.stdin, output: process.stdout });
 
   try {
-    console.log('');
-    console.log(chalk.hex('#FF1A1A').bold('  ═══ Salus · Configuração BYOK ═══'));
-    console.log('');
+    if (ownRl) {
+      console.log('');
+      console.log(chalk.hex('#FF1A1A').bold('  ═══ Salus · Configuração BYOK ═══'));
+      console.log('');
+    }
 
     let apiKey = '';
     while (!apiKey) {
@@ -74,6 +74,6 @@ export async function configCommand(): Promise<void> {
     console.log(chalk.hex('#555555')(`  Modelo: ${model}`));
     console.log('');
   } finally {
-    rl.close();
+    if (ownRl) rl.close();
   }
 }
