@@ -1,4 +1,10 @@
 <p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/EN-🇺🇸-FF1A1A?style=flat-square" alt="English"></a>
+  <a href="README.pt-BR.md"><img src="https://img.shields.io/badge/PT--BR-🇧🇷-FF1A1A?style=flat-square" alt="Português"></a>
+  <a href="README.es.md"><img src="https://img.shields.io/badge/ES-🇪🇸-FF1A1A?style=flat-square" alt="Español"></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/npm/v/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="npm version">
   <img src="https://img.shields.io/npm/l/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="license">
   <img src="https://img.shields.io/node/v/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="node version">
@@ -9,22 +15,22 @@
 </p>
 
 <h1 align="center">Salus</h1>
-<p align="center"><strong>Seu especialista em AppSec rodando no terminal.</strong></p>
+<p align="center"><strong>Your AppSec specialist running in the terminal.</strong></p>
 <p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM Security</p>
 
 ---
 
-## Sobre
+## About
 
-**Salus** é um CLI de segurança de aplicações com inteligência artificial.  
-Ele escaneia seu projeto, envia o contexto para uma LLM (modelo BYOK — _Bring Your Own Key_),
-gera um relatório completo de vulnerabilidades e aplica correções automaticamente
-**sem alterar suas regras de negócio**.
+**Salus** is an AI-powered Application Security CLI.  
+It scans your project, sends structured context to an LLM (BYOK — _Bring Your Own Key_),
+generates a comprehensive vulnerability report, and applies fixes automatically
+**without altering your business logic**.
 
-Quatro motores de análise em uma ferramenta:
+Four analysis engines in one tool:
 
-| Modo | Comando | Foco |
-|------|---------|------|
+| Mode | Command | Focus |
+|------|---------|-------|
 | **Vulnerability Scanner** | `salus analyze` | OWASP Top 10, CVEs, CVSS 4.0, EPSS, CISA KEV, SBOM + VEX, Reachability |
 | **Red Team** | `salus redteam` | Kill chain, MITRE ATT&CK, injection points, lateral movement, privilege escalation |
 | **Blue Team** | `salus harden` | Defense-in-depth, CIS Benchmarks, security headers, rate limiting, crypto hardening |
@@ -32,26 +38,26 @@ Quatro motores de análise em uma ferramenta:
 
 ---
 
-## Instalação
+## Installation
 
 ```bash
 npm install -g salus-appsec
 ```
 
-**Pré-requisitos:** Node.js ≥ 20.
+**Requirements:** Node.js ≥ 20.
 
 ---
 
-## Configuração (BYOK)
+## Configuration (BYOK)
 
-O Salus usa o modelo **Bring Your Own Key** — você fornece sua própria API Key da OpenAI.
-A chave é armazenada localmente em `~/.salus/config.json` com permissões restritas.
+Salus uses the **Bring Your Own Key** model — you provide your own OpenAI API key.
+The key is stored locally in `~/.salus/config.json` with restrictive permissions.
 
 ```bash
 salus config
 ```
 
-Suporte a variáveis de ambiente para CI/CD:
+Environment variable support for CI/CD:
 
 ```bash
 export SALUS_OPENAI_API_KEY="sk-..."
@@ -60,38 +66,38 @@ export SALUS_OPENAI_MODEL="gpt-4o"
 
 ---
 
-## Como usar
+## Usage
 
-### Terminal interativo (REPL)
+### Interactive Terminal (REPL)
 
 ```bash
 salus
 ```
 
-Isso abre um prompt contínuo onde você pode digitar comandos:
+This opens a continuous prompt where you can type commands:
 
 ```
-salus › /analyze    # varredura de vulnerabilidades
-salus › /redteam    # análise ofensiva
-salus › /harden     # hardening defensivo
-salus › /aisec      # auditoria AI/LLM
-salus › /config     # configurar API Key
-salus › /help       # ajuda
-salus › /exit       # sair
+salus › /analyze    # vulnerability scan
+salus › /redteam    # offensive analysis
+salus › /harden     # defensive hardening
+salus › /aisec      # AI/LLM audit
+salus › /config     # configure API key
+salus › /help       # help
+salus › /exit       # quit
 ```
 
-### Comandos diretos
+### Direct Commands
 
 ```bash
-salus analyze              # Varredura OWASP + CVSS + EPSS + KEV
-salus redteam              # Análise Red Team (kill chain, ATT&CK)
-salus harden               # Hardening Blue Team (defense-in-depth)
-salus aisec                # Auditoria AI/LLM (OWASP LLM Top 10)
+salus analyze              # OWASP + CVSS + EPSS + KEV scan
+salus redteam              # Red Team analysis (kill chain, ATT&CK)
+salus harden               # Blue Team hardening (defense-in-depth)
+salus aisec                # AI/LLM audit (OWASP LLM Top 10)
 ```
 
-### Saída
+### Output
 
-Cada comando gera um relatório Markdown na raiz do projeto:
+Each command generates a Markdown report in the project root:
 
 ```
 analyze  →  security-report.md
@@ -100,68 +106,68 @@ harden   →  defense-hardening-report.md
 aisec    →  ai-security-report.md
 ```
 
-Após a geração, o Salus pergunta interativamente se você deseja aplicar as correções sugeridas — com backup automático antes de cada patch.
+After generation, Salus interactively asks whether to apply suggested fixes — with automatic backup before each patch.
 
 ---
 
 ## Features
 
 ### Vulnerability Scanner
-- **OWASP Top 10** completo com CVSS 4.0/3.1 e vector strings
+- Full **OWASP Top 10** with CVSS 4.0/3.1 and vector strings
 - **EPSS** (Exploit Prediction Scoring System) + **CISA KEV** catalog
-- **SBOM + VEX** — geração de software bill of materials com statements `affected / not_affected / fixed`
-- **Reachability Analysis** — a função vulnerável é realmente chamada?
-- Auditoria de dependências (`package.json`, `requirements.txt`, `go.mod`, `pom.xml`, `Cargo.toml`)
-- Config review: Nginx, SSH, Docker, Kubernetes com CIS Benchmarks
+- **SBOM + VEX** — software bill of materials with `affected / not_affected / fixed` statements
+- **Reachability Analysis** — is the vulnerable function actually called?
+- Dependency auditing (`package.json`, `requirements.txt`, `go.mod`, `pom.xml`, `Cargo.toml`)
+- Config review: Nginx, SSH, Docker, Kubernetes with CIS Benchmarks
 
 ### Red Team
-- **Kill chain** completa (11 fases) com MITRE ATT&CK mapping
+- Complete **kill chain** (11 phases) with MITRE ATT&CK mapping
 - Injection points, auth bypass, SSRF, RCE, IDOR, race conditions
 - Lateral movement, privilege escalation, defense evasion, OPSEC failures
 - AD attack paths, cloud/metadata exploitation
 
 ### Blue Team
-- **Defense-in-depth** (6 camadas): perímetro → aplicação → auth → dados → infra → observabilidade
-- CIS Benchmarks para Node.js, Nginx, Docker, Kubernetes, PostgreSQL
+- **Defense-in-depth** (6 layers): perimeter → application → auth → data → infra → observability
+- CIS Benchmarks for Node.js, Nginx, Docker, Kubernetes, PostgreSQL
 - Security headers (CSP, HSTS, X-Frame-Options), rate limiting, MFA
 - Password hashing (bcrypt/argon2), TLS 1.3, container hardening
-- Logging estruturado, audit trail, secrets management
+- Structured logging, audit trail, secrets management
 
 ### AI/LLM Security
 - **OWASP Top 10 for LLM Applications (2025)** + MITRE ATLAS
-- Prompt injection (direto, indireto, encoding, multi-turn, crescendo)
+- Prompt injection (direct, indirect, encoding, multi-turn, crescendo)
 - RAG/vector store security, agent & tool-use security (MCP)
 - Model supply chain (pickle/safetensors), guardrails & output handling
 
-### Auto-Fix Inteligente
-- Backup automático antes de cada patch (`~/.salus/backups/`)
-- Substituição de múltiplas ocorrências
-- Validação de schema do output da IA
-- Detecção de padrões perigosos no código sugerido
-- Preservação estrita da lógica de negócio
+### Smart Auto-Fix
+- Automatic backup before each patch (`~/.salus/backups/`)
+- Multi-occurrence replacement
+- AI output schema validation
+- Dangerous pattern detection in suggested code
+- Strict business logic preservation
 
 ---
 
-## Segurança do próprio Salus
+## Salus Security
 
-O Salus foi auditado com... o próprio Salus. Todos os 4 motores de análise foram aplicados
-ao código-fonte da ferramenta e as correções foram implementadas:
+Salus was audited with... Salus itself. All 4 analysis engines were applied to
+the tool's source code and fixes were implemented:
 
-- Anti prompt-injection em todos os system prompts
-- Validação de schema no output da IA
-- Secrets redaction em logs e auditoria
-- Boundary demarcation (`<CODE_ANALYSIS_BOUNDARY>`) no input da LLM
-- File permissions restritas no config (`0700`/`0600`)
-- Context size limits no scanner
-- Token usage tracking e estimativa de custo
+- Anti prompt-injection in all system prompts
+- Schema validation on AI output
+- Secrets redaction in logs and audit trail
+- Boundary demarcation (`<CODE_ANALYSIS_BOUNDARY>`) on LLM input
+- Restrictive file permissions on config (`0700`/`0600`)
+- Context size limits in the scanner
+- Token usage tracking and cost estimation
 
 ---
 
-## Contribuindo
+## Contributing
 
 ```bash
-git clone https://github.com/salus-appsec/salus
-cd salus
+git clone https://github.com/155157171/salus-appsec
+cd salus-appsec
 npm install
 npm run build
 node dist/index.js
@@ -169,6 +175,6 @@ node dist/index.js
 
 ---
 
-## Licença
+## License
 
 MIT © Salus AppSec
