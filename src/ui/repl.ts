@@ -308,6 +308,7 @@ export async function startREPL(): Promise<void> {
 
         if (['/config', '/c'].includes(line)) {
           rl.close();
+          await new Promise<void>(r => rl.on('close', r));
           await handleConfig();
           resolve('restart');
           return;
@@ -323,9 +324,10 @@ export async function startREPL(): Promise<void> {
         rl.prompt();
       });
 
-      rl.on('close', () => resolve('exit'));
-
-      rl.on('SIGINT', () => rl.close());
+      rl.on('SIGINT', () => {
+        rl.close();
+        resolve('exit');
+      });
     });
 
     if (result === 'exit') running = false;

@@ -256,6 +256,7 @@ export async function startREPL() {
                 }
                 if (['/config', '/c'].includes(line)) {
                     rl.close();
+                    await new Promise(r => rl.on('close', r));
                     await handleConfig();
                     resolve('restart');
                     return;
@@ -268,8 +269,10 @@ export async function startREPL() {
                 console.log(chalk.hex(ASH)('  /help para comandos'));
                 rl.prompt();
             });
-            rl.on('close', () => resolve('exit'));
-            rl.on('SIGINT', () => rl.close());
+            rl.on('SIGINT', () => {
+                rl.close();
+                resolve('exit');
+            });
         });
         if (result === 'exit')
             running = false;

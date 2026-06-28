@@ -41,6 +41,7 @@ program
   .action(async () => {
     try {
       await configCommand();
+      await startREPL();
     } catch (err) {
       console.error(err);
       process.exit(1);
