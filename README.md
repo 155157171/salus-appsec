@@ -4,6 +4,10 @@
   <img src="https://img.shields.io/node/v/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="node version">
 </p>
 
+<p align="center">
+  <img src="logo.png" alt="Salus" width="180">
+</p>
+
 <h1 align="center">Salus</h1>
 <p align="center"><strong>Seu especialista em AppSec rodando no terminal.</strong></p>
 <p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM Security</p>
