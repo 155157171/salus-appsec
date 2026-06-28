@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+*.env
+.salus/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

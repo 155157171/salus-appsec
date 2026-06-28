@@ -1,0 +1,57 @@
+# Source (shipped as compiled JS in dist/)
+src/
+tsconfig.json
+tsconfig.*.json
+
+# Dev / CI
+.github/
+.vscode/
+.idea/
+.editorconfig
+
+# Environment & secrets
+.env
+.env.*
+*.env
+
+# Tests & coverage
+test/
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+coverage/
+.nyc_output/
+
+# Docs (except README which npm shows on the package page)
+docs/
+ARCHITECTURE.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# OS junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Build artifacts (npm will ship dist/ only)
+node_modules/
+
+# Lock files (npm will generate its own)
+yarn.lock
+pnpm-lock.yaml
+package-lock.json
+
+# Misc
+examples/
+benchmarks/
+scripts/
+tmp/
+temp/

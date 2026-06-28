@@ -1,0 +1,71 @@
+{
+  "name": "salus-appsec",
+  "version": "1.0.0",
+  "description": "Salus — CLI de AppSec com IA. Code review, análise de vulnerabilidades, hardening defensivo e auditoria AI/LLM. Modo BYOK (Bring Your Own Key).",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "salus": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prebuild": "node --input-type=commonjs -e \"const fs=require('fs');if(!fs.existsSync('dist'))fs.mkdirSync('dist')\"",
+    "audit": "npm audit --audit-level=high",
+    "audit:fix": "npm audit fix",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "appsec",
+    "cli",
+    "ai",
+    "code-review",
+    "owasp",
+    "openai",
+    "security",
+    "vulnerability-scanner",
+    "red-team",
+    "blue-team",
+    "hardening",
+    "llm-security",
+    "prompt-injection",
+    "cvss",
+    "mitre-attack",
+    "byok",
+    "sast",
+    "devsecops"
+  ],
+  "author": {
+    "name": "Salus AppSec",
+    "url": "https://github.com/salus-appsec/salus"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salus-appsec/salus"
+  },
+  "homepage": "https://github.com/salus-appsec/salus#readme",
+  "bugs": {
+    "url": "https://github.com/salus-appsec/salus/issues"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.6.0",
+    "@inquirer/prompts": "^7.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^13.1.0",
+    "fast-glob": "^3.3.3",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.0",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/marked-terminal": "^6.1.1",
+    "@types/node": "^22.17.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,286 @@
+import { resolve } from 'path';
+import { writeFileSync } from 'fs';
+import chalk from 'chalk';
+import { spinner, confirm, isCancel, log } from '@clack/prompts';
+import { getApiKey, getModel } from '../utils/config-store.js';
+import { audit } from '../utils/logger.js';
+import { scanProject } from '../core/scanner.js';
+import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity, type Vulnerability } from '../core/ai-adapter.js';
+import { applyFix } from '../core/patcher.js';
+
+export type { Vulnerability };
+
+export interface AnalysisResult {
+  markdownReport: string;
+  vulnerabilities: Vulnerability[];
+  rawResponse: string;
+}
+
+type AnalysisMode = 'vuln' | 'redteam' | 'blueteam' | 'aisec';
+
+async function runAnalysis(
+  rootDir: string,
+  mode: AnalysisMode,
+): Promise<AnalysisResult> {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('API Key não configurada. Use /config para configurar.');
+  }
+
+  const codeXml = await scanProject(rootDir);
+
+  let vulnerabilities: Vulnerability[];
+  if (mode === 'redteam') {
+    vulnerabilities = await analyzeWithRedTeam(apiKey, codeXml);
+  } else if (mode === 'blueteam') {
+    vulnerabilities = await analyzeWithBlueTeam(apiKey, codeXml);
+  } else if (mode === 'aisec') {
+    vulnerabilities = await analyzeWithAISecurity(apiKey, codeXml);
+  } else {
+    vulnerabilities = await analyzeWithAI(apiKey, codeXml);
+  }
+
+  const rawJson = JSON.stringify(vulnerabilities, null, 2);
+  const markdownReport = buildReport(vulnerabilities, mode);
+
+  let filename: string;
+  if (mode === 'redteam') {
+    filename = 'red-team-report.md';
+  } else if (mode === 'blueteam') {
+    filename = 'defense-hardening-report.md';
+  } else if (mode === 'aisec') {
+    filename = 'ai-security-report.md';
+  } else {
+    filename = 'security-report.md';
+  }
+  const reportPath = resolve(rootDir, filename);
+  writeFileSync(reportPath, markdownReport, 'utf-8');
+
+  return { markdownReport, vulnerabilities, rawResponse: rawJson };
+}
+
+export async function runAnalysisCLI(rootDir: string): Promise<AnalysisResult> {
+  return runAnalysis(rootDir, 'vuln');
+}
+
+export async function runRedTeamAnalysis(rootDir: string): Promise<AnalysisResult> {
+  return runAnalysis(rootDir, 'redteam');
+}
+
+export async function runBlueTeamHardening(rootDir: string): Promise<AnalysisResult> {
+  return runAnalysis(rootDir, 'blueteam');
+}
+
+export async function runAISecurityAudit(rootDir: string): Promise<AnalysisResult> {
+  return runAnalysis(rootDir, 'aisec');
+}
+
+async function applyFixesInteractively(
+  rootDir: string,
+  vulnerabilities: Vulnerability[],
+): Promise<void> {
+  if (vulnerabilities.length === 0) {
+    log.success('Nenhum vetor de ataque encontrado.');
+    return;
+  }
+
+  log.warn(`Encontrados ${vulnerabilities.length} vetores de ataque.`);
+
+  console.log('');
+
+  for (const v of vulnerabilities) {
+    const sevColor =
+      v.severidade === 'CRITICAL' ? chalk.hex('#FF0000').bold :
+      v.severidade === 'HIGH' ? chalk.hex('#FF3333').bold :
+      v.severidade === 'MEDIUM' ? chalk.hex('#FF6600') :
+      chalk.hex('#555555');
+
+    console.log(sevColor.bold(`  [${v.severidade}] ${v.id_vulnerabilidade}`));
+    console.log(chalk.gray(`  Arquivo: ${v.arquivo}`));
+    console.log(chalk.white(`  ${v.descricao}`));
+    console.log('');
+
+    if (v.codigo_novo_sugerido) {
+      const shouldFix = await confirm({
+        message: `Deseja aplicar a mitigação no arquivo ${v.arquivo}?`,
+      });
+
+      if (isCancel(shouldFix)) {
+        log.warn('Correção cancelada pelo usuário.');
+        break;
+      }
+
+      if (shouldFix) {
+        try {
+          const fullPath = resolve(rootDir, v.arquivo);
+          await applyFix(fullPath, v.codigo_antigo, v.codigo_novo_sugerido);
+          log.success(`${v.id_vulnerabilidade} aplicada em ${v.arquivo}`);
+        } catch (err) {
+          log.error(`Falha ao aplicar ${v.id_vulnerabilidade}: ${(err as Error).message}`);
+        }
+      }
+    }
+  }
+}
+
+async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    log.error('API Key não configurada. Execute primeiro: salus config');
+    process.exit(1);
+  }
+
+  const rootDir = process.cwd();
+
+  audit(`analysis:start mode=${mode} dir=${rootDir}`);
+
+  const s = spinner();
+  s.start('Mapeando arquitetura e arquivos...');
+
+  let codeXml: string;
+  try {
+    codeXml = await scanProject(rootDir);
+  } catch (err) {
+    s.stop(`Falha ao escanear: ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  s.message(label);
+
+  let vulnerabilities: Vulnerability[];
+  try {
+    vulnerabilities =
+      mode === 'redteam'
+        ? await analyzeWithRedTeam(apiKey, codeXml)
+        : mode === 'blueteam'
+          ? await analyzeWithBlueTeam(apiKey, codeXml)
+          : mode === 'aisec'
+            ? await analyzeWithAISecurity(apiKey, codeXml)
+            : await analyzeWithAI(apiKey, codeXml);
+  } catch (err) {
+    s.stop(`Falha na análise: ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  s.stop('Análise concluída');
+
+  audit(`analysis:complete mode=${mode} findings=${vulnerabilities.length}`);
+
+  const markdownReport = buildReport(vulnerabilities, mode);
+  let filename: string;
+  if (mode === 'redteam') {
+    filename = 'red-team-report.md';
+  } else if (mode === 'blueteam') {
+    filename = 'defense-hardening-report.md';
+  } else if (mode === 'aisec') {
+    filename = 'ai-security-report.md';
+  } else {
+    filename = 'security-report.md';
+  }
+  const reportPath = resolve(rootDir, filename);
+  writeFileSync(reportPath, markdownReport, 'utf-8');
+
+  log.success(`Relatório salvo em: ${reportPath}`);
+
+  await applyFixesInteractively(rootDir, vulnerabilities);
+
+  console.log('');
+  log.success('Processo de análise e correção finalizado.');
+}
+
+export async function analyzeCommand(): Promise<void> {
+  await commandRunner('vuln', 'Analisando vulnerabilidades (CVSS/EPSS) com IA...');
+}
+
+export async function redTeamCommand(): Promise<void> {
+  await commandRunner('redteam', 'Analisando vetores de ataque com mindset Red Team...');
+}
+
+export async function hardenCommand(): Promise<void> {
+  await commandRunner('blueteam', 'Aplicando hardening defensivo (Blue Team)...');
+}
+
+export async function aiSecurityCommand(): Promise<void> {
+  await commandRunner('aisec', 'Analisando segurança AI/LLM (OWASP LLM Top 10)...');
+}
+
+function buildReport(vulnerabilities: Vulnerability[], mode: AnalysisMode): string {
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  let title: string;
+  let subtitle: string;
+  let emptyMessage: string;
+
+  if (mode === 'redteam') {
+    title = 'Relatório Red Team — Salus';
+    subtitle = '**Motor:** RED_TEAM_PROMPT (MITRE ATT&CK, Kill Chain, Lateral Movement)';
+    emptyMessage = 'A IA não identificou vetores de ataque exploráveis.\n\n';
+  } else if (mode === 'blueteam') {
+    title = 'Relatório de Hardening Defensivo — Salus';
+    subtitle = '**Motor:** BLUE_TEAM_PROMPT (Defense-in-Depth, CIS Benchmarks, OWASP ASVS)';
+    emptyMessage = 'A IA não identificou ações de hardening necessárias.\n\n';
+  } else if (mode === 'aisec') {
+    title = 'Relatório de AI/LLM Security — Salus';
+    subtitle = '**Motor:** AI_SECURITY_PROMPT (OWASP LLM Top 10 2025, MITRE ATLAS)';
+    emptyMessage = 'A IA não identificou riscos de AI/LLM security.\n\n';
+  } else {
+    title = 'Relatório de Segurança — Salus';
+    subtitle = '**Motor:** VULNERABILITY_SCAN_PROMPT (CVSS 4.0, EPSS, KEV)';
+    emptyMessage = 'A IA não identificou problemas de segurança no código analisado.\n\n';
+  }
+
+  let md = `# ${title}\n\n`;
+  md += `**Data:** ${now}\n`;
+  md += `${subtitle}\n`;
+  md += `**Total de findings:** ${vulnerabilities.length}\n\n`;
+  md += `---\n\n`;
+
+  if (vulnerabilities.length === 0) {
+    md += `## ✅ ${emptyMessage}\n`;
+  } else {
+    const severityCount: Record<string, number> = {};
+    for (const v of vulnerabilities) {
+      severityCount[v.severidade] = (severityCount[v.severidade] || 0) + 1;
+    }
+
+    md += `## Resumo por Severidade\n\n`;
+    md += `| Severidade | Quantidade |\n`;
+    md += `|------------|------------|\n`;
+    md += `| 🔴 CRITICAL  | ${severityCount['CRITICAL'] || 0} |\n`;
+    md += `| 🔴 HIGH      | ${severityCount['HIGH'] || 0} |\n`;
+    md += `| 🟡 MEDIUM    | ${severityCount['MEDIUM'] || 0} |\n`;
+    md += `| 🟢 LOW       | ${severityCount['LOW'] || 0} |\n\n`;
+
+    md += `---\n\n`;
+    md += `## Findings\n\n`;
+
+    for (const v of vulnerabilities) {
+      const sevEmoji: Record<string, string> = {
+        CRITICAL: '🔴',
+        HIGH: '🔴',
+        MEDIUM: '🟡',
+        LOW: '🟢',
+      };
+
+      md += `### ${sevEmoji[v.severidade] || ''} ${v.id_vulnerabilidade} — ${v.severidade}\n\n`;
+      md += `- **Arquivo:** \`${v.arquivo}\`\n`;
+      md += `- **Descrição:** ${v.descricao}\n`;
+
+      if (v.codigo_antigo) {
+        const lang = v.arquivo.split('.').pop() || '';
+        md += `\n**Código vulnerável:**\n`;
+        md += `\`\`\`${lang}\n${v.codigo_antigo}\n\`\`\`\n`;
+      }
+
+      if (v.codigo_novo_sugerido) {
+        const lang = v.arquivo.split('.').pop() || '';
+        md += `\n**Sugestão de mitigação:**\n`;
+        md += `\`\`\`${lang}\n${v.codigo_novo_sugerido}\n\`\`\`\n`;
+      }
+
+      md += `\n---\n\n`;
+    }
+  }
+
+  return md;
+}
