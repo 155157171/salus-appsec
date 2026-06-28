@@ -17,6 +17,7 @@
 <h1 align="center">Salus</h1>
 <p align="center"><strong>Your AppSec specialist running in the terminal.</strong></p>
 <p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM Security</p>
+<p align="center"><sub>Open-source project developed by <strong><a href="https://github.com/155157171">Oryn Labs</a></strong></sub></p>
 
 ---
 

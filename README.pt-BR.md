@@ -17,6 +17,7 @@
 <h1 align="center">Salus</h1>
 <p align="center"><strong>Seu especialista em AppSec rodando no terminal.</strong></p>
 <p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM Security</p>
+<p align="center"><sub>Projeto open-source desenvolvido pela <strong><a href="https://github.com/155157171">Oryn Labs</a></strong></sub></p>
 
 ---
 
