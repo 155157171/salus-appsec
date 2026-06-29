@@ -14,7 +14,7 @@ program
     'Ferramenta de revisão de código, análise de arquitetura e segurança.\n' +
     'Modo BYOK (Bring Your Own Key): use sua própria API Key OpenAI.',
   )
-  .version('1.0.14')
+  .version('1.0.15')
   .addHelpText(
     'after',
     '\nEXEMPLOS:\n' +
