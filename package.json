@@ -1,6 +1,6 @@
 {
   "name": "salus-appsec",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Salus — CLI de AppSec com IA. Code review, análise de vulnerabilidades, hardening defensivo e auditoria AI/LLM. Modo BYOK (Bring Your Own Key).",
   "type": "module",
   "main": "dist/index.js",
