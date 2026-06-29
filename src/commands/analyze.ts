@@ -22,7 +22,7 @@ async function runAnalysis(
   rootDir: string,
   mode: AnalysisMode,
 ): Promise<AnalysisResult> {
-  const { provider, apiKey } = getCredentials();
+  const { provider, apiKey, model } = getCredentials();
   if (!provider || !apiKey) {
     throw new Error('Nenhum provedor configurado. Execute "salus config" primeiro.');
   }
@@ -31,15 +31,15 @@ async function runAnalysis(
 
   let vulnerabilities: Vulnerability[];
   if (mode === 'redteam') {
-    vulnerabilities = await analyzeWithRedTeam(provider, apiKey, codeXml);
+    vulnerabilities = await analyzeWithRedTeam(provider, apiKey, model, codeXml);
   } else if (mode === 'blueteam') {
-    vulnerabilities = await analyzeWithBlueTeam(provider, apiKey, codeXml);
+    vulnerabilities = await analyzeWithBlueTeam(provider, apiKey, model, codeXml);
   } else if (mode === 'aisec') {
-    vulnerabilities = await analyzeWithAISecurity(provider, apiKey, codeXml);
+    vulnerabilities = await analyzeWithAISecurity(provider, apiKey, model, codeXml);
   } else if (mode === 'websec') {
-    vulnerabilities = await analyzeWithWebSecurity(provider, apiKey, codeXml);
+    vulnerabilities = await analyzeWithWebSecurity(provider, apiKey, model, codeXml);
   } else {
-    vulnerabilities = await analyzeWithAI(provider, apiKey, codeXml);
+    vulnerabilities = await analyzeWithAI(provider, apiKey, model, codeXml);
   }
 
   const rawJson = JSON.stringify(vulnerabilities, null, 2);
@@ -164,7 +164,7 @@ async function applyFixesInteractively(
 }
 
 async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
-  const { provider, apiKey } = getCredentials();
+  const { provider, apiKey, model } = getCredentials();
   if (!provider || !apiKey) {
     log.error('Nenhum provedor configurado. Execute primeiro: salus config');
     process.exit(1);
@@ -172,7 +172,7 @@ async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
 
   const rootDir = process.cwd();
 
-  audit(`analysis:start mode=${mode} dir=${rootDir} provider=${provider}`);
+  audit(`analysis:start mode=${mode} dir=${rootDir} provider=${provider} model=${model}`);
 
   const s = spinner();
   s.start('Mapeando arquitetura e arquivos...');
@@ -185,20 +185,20 @@ async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
     process.exit(1);
   }
 
-  s.message(label);
+  s.message(`Analisando vulnerabilidades usando o modelo ${model}...`);
 
   let vulnerabilities: Vulnerability[];
   try {
     vulnerabilities =
       mode === 'redteam'
-        ? await analyzeWithRedTeam(provider, apiKey, codeXml)
+        ? await analyzeWithRedTeam(provider, apiKey, model, codeXml)
         : mode === 'blueteam'
-          ? await analyzeWithBlueTeam(provider, apiKey, codeXml)
+          ? await analyzeWithBlueTeam(provider, apiKey, model, codeXml)
           : mode === 'aisec'
-            ? await analyzeWithAISecurity(provider, apiKey, codeXml)
+            ? await analyzeWithAISecurity(provider, apiKey, model, codeXml)
             : mode === 'websec'
-              ? await analyzeWithWebSecurity(provider, apiKey, codeXml)
-              : await analyzeWithAI(provider, apiKey, codeXml);
+              ? await analyzeWithWebSecurity(provider, apiKey, model, codeXml)
+              : await analyzeWithAI(provider, apiKey, model, codeXml);
   } catch (err) {
     s.stop(`Falha na análise: ${(err as Error).message}`);
     process.exit(1);
@@ -206,7 +206,7 @@ async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
 
   s.stop('Análise concluída');
 
-  audit(`analysis:complete mode=${mode} findings=${vulnerabilities.length}`);
+  audit(`analysis:complete mode=${mode} findings=${vulnerabilities.length} model=${model}`);
 
   const markdownReport = buildReport(vulnerabilities, mode);
   let filename: string;

@@ -67,17 +67,18 @@ function writeConfig(data: ConfigData): void {
   writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
 }
 
-export function setCredentials(provider: Provider, apiKey: string): void {
+export function setCredentials(provider: Provider, apiKey: string, model: string): void {
   const config = readConfig();
   config.provider = provider;
   config.apiKey = apiKey;
+  config.model = model;
   writeConfig(config);
 }
 
-export function getCredentials(): { provider: string; apiKey: string } {
+export function getCredentials(): { provider: string; apiKey: string; model: string } {
   ensureSecurePermissions();
   const config = readConfig();
-  return { provider: config.provider, apiKey: config.apiKey };
+  return { provider: config.provider, apiKey: config.apiKey, model: config.model };
 }
 
 export function setProvider(provider: Provider): void {

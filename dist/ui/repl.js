@@ -63,12 +63,13 @@ function showWelcome() {
     console.log(chalk.hex('#FF4444').bold('    [ AppSec · BYOK · Code Review · Auto-Fix ]'));
     console.log(chalk.hex(ASH)('    Bring Your Own Key — OpenAI · Anthropic · OpenRouter'));
     console.log('');
-    const { provider, apiKey } = getCredentials();
+    const { provider, apiKey, model } = getCredentials();
     if (!provider) {
         console.log(chalk.hex(WARN)(`    ▲  Nenhum provedor configurado — /config`));
     }
     else {
-        console.log(chalk.hex(DIM_RED)(`    ◆  ${provider.toUpperCase()} · ${apiKey.slice(0, 12)}...`));
+        console.log(chalk.hex(DIM_RED)(`    ◆  ${provider.toUpperCase()} · ${model}`));
+        console.log(chalk.hex('#444444')(`    ${apiKey.slice(0, 14)}...`));
     }
     console.log('');
     console.log(chalk.hex(ASH)('    /analyze    /redteam    /harden    /aisec    /websec'));

@@ -1,8 +1,9 @@
 type Provider = 'openai' | 'anthropic' | 'openrouter';
-export declare function setCredentials(provider: Provider, apiKey: string): void;
+export declare function setCredentials(provider: Provider, apiKey: string, model: string): void;
 export declare function getCredentials(): {
     provider: string;
     apiKey: string;
+    model: string;
 };
 export declare function setProvider(provider: Provider): void;
 export declare function getProvider(): string;
