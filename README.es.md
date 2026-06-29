@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/npm/v/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="npm version">
   <img src="https://img.shields.io/npm/l/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="license">
   <img src="https://img.shields.io/node/v/salus-appsec?color=%23FF1A1A&style=for-the-badge" alt="node version">
+  <img src="https://img.shields.io/badge/LLMs-OpenAI_|_Anthropic_|_OpenRouter-FF1A1A?style=for-the-badge" alt="providers">
 </p>
 
 <p align="center">
@@ -16,7 +17,7 @@
 
 <h1 align="center">Salus</h1>
 <p align="center"><strong>Tu especialista en AppSec ejecutándose en la terminal.</strong></p>
-<p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM Security</p>
+<p align="center">Code Review · Vulnerability Scanner · Red Team · Blue Team · AI/LLM · Web Security</p>
 <p align="center"><sub>Proyecto open-source desarrollado por <strong><a href="https://github.com/155157171">Oryn Labs</a></strong></sub></p>
 
 ---
@@ -28,7 +29,7 @@ Escanea tu proyecto, envía el contexto estructurado a un LLM (BYOK — _Bring Y
 genera un informe completo de vulnerabilidades y aplica correcciones automáticamente
 **sin alterar tu lógica de negocio**.
 
-Cuatro motores de análisis en una herramienta:
+Seis motores de análisis en una herramienta:
 
 | Modo | Comando | Enfoque |
 |------|---------|---------|
@@ -36,6 +37,7 @@ Cuatro motores de análisis en una herramienta:
 | **Red Team** | `salus redteam` | Kill chain, MITRE ATT&CK, puntos de inyección, lateral movement, privilege escalation |
 | **Blue Team** | `salus harden` | Defense-in-depth, CIS Benchmarks, security headers, rate limiting, hardening cripto |
 | **AI/LLM Security** | `salus aisec` | OWASP LLM Top 10 2025, prompt injection, RAG, seguridad de agentes/MCP |
+| **Web Security** | `salus websec` | OWASP Top 10 2021, SQLi, XSS, SSRF, SSTI, auth bypass, payment bypass |
 
 ---
 
@@ -51,8 +53,15 @@ npm install -g salus-appsec
 
 ## Configuración (BYOK)
 
-Salus usa el modelo **Bring Your Own Key** — proporcionas tu propia API Key de OpenAI.
-La clave se almacena localmente en `~/.salus/config.json` con permisos restrictivos.
+Salus soporta **3 proveedores de LLM** — elige el tuyo:
+
+| Proveedor | Prefijo | Modelos |
+|-----------|---------|---------|
+| **OpenAI** | `sk-proj-...` | gpt-4o, gpt-4o-mini |
+| **Anthropic** | `sk-ant-...` | claude-3-5-sonnet |
+| **OpenRouter** | `sk-or-...` | anthropic/claude-3.5-sonnet |
+
+La clave se almacena en `~/.salus/config.json` con permisos restrictivos (`0700`/`0600`).
 
 ```bash
 salus config
@@ -82,7 +91,8 @@ salus › /analyze    # escaneo de vulnerabilidades
 salus › /redteam    # análisis ofensivo
 salus › /harden     # hardening defensivo
 salus › /aisec      # auditoría AI/LLM
-salus › /config     # configurar API Key
+salus › /websec     # seguridad web/API
+salus › /config     # configurar proveedor + API Key
 salus › /help       # ayuda
 salus › /exit       # salir
 ```
@@ -94,6 +104,7 @@ salus analyze              # Escaneo OWASP + CVSS + EPSS + KEV
 salus redteam              # Análisis Red Team (kill chain, ATT&CK)
 salus harden               # Hardening Blue Team (defense-in-depth)
 salus aisec                # Auditoría AI/LLM (OWASP LLM Top 10)
+salus websec               # Seguridad web/API (OWASP, SQLi, XSS, SSRF)
 ```
 
 ### Salida
@@ -105,9 +116,8 @@ analyze  →  security-report.md
 redteam  →  red-team-report.md
 harden   →  defense-hardening-report.md
 aisec    →  ai-security-report.md
+websec   →  web-security-report.md
 ```
-
-Después de la generación, Salus pregunta interactivamente si deseas aplicar las correcciones sugeridas — con backup automático antes de cada patch.
 
 ---
 
@@ -140,18 +150,31 @@ Después de la generación, Salus pregunta interactivamente si deseas aplicar la
 - Seguridad de RAG/vector store, agentes y tools (MCP)
 - Model supply chain (pickle/safetensors), guardrails & output handling
 
-### Auto-Fix Inteligente
+### Web Security
+- **OWASP Top 10 (2021)** — A01 a A10 con mapeo CWE
+- SQL Injection, XSS (por contexto), Command Injection, SSRF, SSTI por engine
+- Seguridad de API: BOLA/IDOR, mass assignment, GraphQL, ataques JWT
+- Bypass de autenticación, fallos de sesión, revisión OAuth/OIDC
+- Bypass de pago: race conditions, manipulación de precios, abuso de cupones
+- CORS/CSP/Security Headers: configuraciones incorrectas
+
+### Auto-Fix Anti-Alucinación
+Salus es la **única CLI con motor anti-alucinación dedicado**. Antes de aplicar cualquier corrección:
+1. Re-lee todo el código fuente para contexto completo
+2. Valida que el código vulnerable existe textualmente en el archivo
+3. Clasifica cada finding como `FIXED`, `FALSE_POSITIVE` o `NEEDS_MANUAL_REVIEW`
+4. Genera el **cambio más pequeño posible** que elimina la vulnerabilidad
+5. Preserva 100% de la lógica de negocio, comentarios y estilo del código
 - Backup automático antes de cada patch (`~/.salus/backups/`)
-- Reemplazo de múltiples ocurrencias
-- Validación de schema del output de la IA
-- Detección de patrones peligrosos en el código sugerido
-- Preservación estricta de la lógica de negocio
+- Reemplazo de múltiples ocurrencias (`replaceAll`)
+- Validación de schema del output de la IA + detección de patrones peligrosos
+- Disclaimer pre-fix: ⚠ _HAZ BACKUP ANTES DEL AUTO-FIX_
 
 ---
 
 ## Seguridad del propio Salus
 
-Salus fue auditado con... el propio Salus. Los 4 motores de análisis se aplicaron al
+Salus fue auditado con... el propio Salus. Todos los motores de análisis se aplicaron al
 código fuente de la herramienta y las correcciones fueron implementadas:
 
 - Anti prompt-injection en todos los system prompts
