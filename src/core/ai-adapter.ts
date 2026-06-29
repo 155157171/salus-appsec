@@ -3,6 +3,7 @@ import { RED_TEAM_PROMPT } from './prompts/red-team.js';
 import { BLUE_TEAM_PROMPT } from './prompts/blue-team.js';
 import { AI_SECURITY_PROMPT } from './prompts/ai-security.js';
 import { WEB_SECURITY_PROMPT } from './prompts/web-security.js';
+import { AUTOFIX_PROMPT } from './prompts/autofix.js';
 
 export interface Vulnerability {
   id_vulnerabilidade: string;
@@ -308,4 +309,14 @@ export async function analyzeWithWebSecurity(
   if (provider === 'anthropic') return callAnthropic(apiKey, WEB_SECURITY_PROMPT, contextXml);
   if (provider === 'openrouter') return callOpenRouter(apiKey, WEB_SECURITY_PROMPT, contextXml);
   return callOpenAI(apiKey, WEB_SECURITY_PROMPT, contextXml);
+}
+
+export async function autoFixWithAI(
+  provider: string,
+  apiKey: string,
+  contextXml: string,
+): Promise<Vulnerability[]> {
+  if (provider === 'anthropic') return callAnthropic(apiKey, AUTOFIX_PROMPT, contextXml);
+  if (provider === 'openrouter') return callOpenRouter(apiKey, AUTOFIX_PROMPT, contextXml);
+  return callOpenAI(apiKey, AUTOFIX_PROMPT, contextXml);
 }

@@ -201,6 +201,15 @@ async function analysisHandlers(
     ),
   );
 
+  console.log('');
+  console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════'));
+  console.log(chalk.hex('#FF1A1A').bold('    ⚠  ATENÇÃO — FAÇA BACKUP ANTES  ⚠'));
+  console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════'));
+  console.log(chalk.hex('#FF4444')('  O auto-fix modificará arquivos do projeto.'));
+  console.log(chalk.hex('#555555')('  Backup automático: ~/.salus/backups/'));
+  console.log(chalk.hex('#555555')('  Reverter: git checkout -- <arquivo>'));
+  console.log('');
+
   const filesToFix = [...new Set(fixable.map(v => v.arquivo))];
 
   for (const file of filesToFix) {

@@ -167,6 +167,14 @@ async function analysisHandlers(rl, mode) {
         return;
     }
     console.log(chalk.hex('#FF6600')(`  ${fixable.length} ${cfg.modeLabel}(s) disponíveis em ${new Set(fixable.map(v => v.arquivo)).size} arquivo(s).`));
+    console.log('');
+    console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════'));
+    console.log(chalk.hex('#FF1A1A').bold('    ⚠  ATENÇÃO — FAÇA BACKUP ANTES  ⚠'));
+    console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════'));
+    console.log(chalk.hex('#FF4444')('  O auto-fix modificará arquivos do projeto.'));
+    console.log(chalk.hex('#555555')('  Backup automático: ~/.salus/backups/'));
+    console.log(chalk.hex('#555555')('  Reverter: git checkout -- <arquivo>'));
+    console.log('');
     const filesToFix = [...new Set(fixable.map(v => v.arquivo))];
     for (const file of filesToFix) {
         const vulnsInFile = fixable.filter(v => v.arquivo === file);

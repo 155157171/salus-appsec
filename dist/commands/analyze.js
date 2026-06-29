@@ -66,11 +66,41 @@ export async function runAISecurityAudit(rootDir) {
 export async function runWebSecurityAudit(rootDir) {
     return runAnalysis(rootDir, 'websec');
 }
+function showAutoFixDisclaimer() {
+    console.log('');
+    console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════════'));
+    console.log(chalk.hex('#FF1A1A').bold('    ⚠  ATENÇÃO — AUTO-FIX EM ANDAMENTO  ⚠'));
+    console.log(chalk.hex('#FF1A1A').bold('  ═══════════════════════════════════════════'));
+    console.log('');
+    console.log(chalk.hex('#FF4444')('  Este processo modificará arquivos do seu projeto.'));
+    console.log(chalk.hex('#FF4444')('  ANTES de continuar, certifique-se de:'));
+    console.log('');
+    console.log(chalk.hex('#FF6600')('    1. Fazer um BACKUP COMPLETO (git commit ou cópia)'));
+    console.log(chalk.hex('#FF6600')('    2. Revisar todas as alterações antes de aplicá-las'));
+    console.log(chalk.hex('#FF6600')('    3. Testar a aplicação após as correções'));
+    console.log(chalk.hex('#FF6600')('    4. Executar sua suíte de testes'));
+    console.log('');
+    console.log(chalk.hex('#555555')('  O Salus faz backup automático em ~/.salus/backups/.'));
+    console.log(chalk.hex('#555555')('  Você pode reverter com: git checkout -- <arquivo>'));
+    console.log('');
+    return confirm({
+        message: 'Deseja continuar com o auto-fix?',
+        active: 'Sim, aplicar correções',
+        inactive: 'Não, apenas gerar relatório',
+        initialValue: false,
+    });
+}
 async function applyFixesInteractively(rootDir, vulnerabilities) {
     if (vulnerabilities.length === 0) {
         log.success('Nenhum vetor de ataque encontrado.');
         return;
     }
+    const shouldProceed = await showAutoFixDisclaimer();
+    if (isCancel(shouldProceed) || !shouldProceed) {
+        log.warn('Auto-fix cancelado. Apenas o relatório foi gerado.');
+        return;
+    }
+    console.log('');
     log.warn(`Encontrados ${vulnerabilities.length} vetores de ataque.`);
     console.log('');
     for (const v of vulnerabilities) {
