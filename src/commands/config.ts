@@ -1,6 +1,5 @@
 import * as readline from 'readline';
 import chalk from 'chalk';
-import { select, text, isCancel } from '@clack/prompts';
 import { setCredentials, getProvider, getModel } from '../utils/config-store.js';
 
 const PROVIDER_MODELS: Record<string, string> = {
@@ -20,6 +19,12 @@ const PROVIDER_NAMES: Record<string, string> = {
   anthropic: 'Anthropic',
   openrouter: 'OpenRouter',
 };
+
+const PROVIDER_LIST = [
+  { value: 'openai', name: 'OpenAI', hint: 'GPT-5.5 Pro' },
+  { value: 'anthropic', name: 'Anthropic', hint: 'Claude 4.8 Opus' },
+  { value: 'openrouter', name: 'OpenRouter', hint: 'Multi-modelo' },
+];
 
 function ask(rl: readline.Interface, query: string): Promise<string> {
   return new Promise((resolve) => {
@@ -43,23 +48,29 @@ export async function configCommand(existingRl?: readline.Interface): Promise<vo
     const currentProvider = getProvider();
     const currentModel = getModel();
 
-    // Step 1: Select provider
-    const providerChoice = await select({
-      message: 'Qual provedor de IA você deseja utilizar?',
-      options: [
-        { value: 'openai', label: 'OpenAI', hint: 'GPT-5.5 Pro' },
-        { value: 'anthropic', label: 'Anthropic', hint: 'Claude 4.8 Opus' },
-        { value: 'openrouter', label: 'OpenRouter', hint: 'Multi-modelo' },
-      ],
-      initialValue: currentProvider || 'openai',
+    // Step 1: Select provider (readline only — no clack)
+    console.log(chalk.hex('#CC3333')('  Selecione o provedor de IA:'));
+    PROVIDER_LIST.forEach((p, i) => {
+      const marker = p.value === currentProvider
+        ? chalk.hex('#FF1A1A').bold(`  [${i + 1}]`)
+        : chalk.hex('#555555')(`  [${i + 1}]`);
+      const name = p.value === currentProvider
+        ? chalk.hex('#FF4444').bold(p.name)
+        : chalk.hex('#888888')(p.name);
+      console.log(`${marker} ${name} ${chalk.hex('#444444')(p.hint)}`);
     });
 
-    if (isCancel(providerChoice)) {
-      console.log(chalk.hex('#FF6600')('\n  ▲ Configuração cancelada.'));
-      return;
+    let provider = '';
+    while (!provider) {
+      const input = await ask(rl, `\n  Provedor [1-${PROVIDER_LIST.length}]: `);
+      const idx = parseInt(input, 10);
+      if (idx >= 1 && idx <= PROVIDER_LIST.length) {
+        provider = PROVIDER_LIST[idx - 1].value;
+      } else {
+        console.log(chalk.hex('#FF6600')(`  ▲ Digite um número entre 1 e ${PROVIDER_LIST.length}.`));
+      }
     }
 
-    const provider = providerChoice as string;
     const prefix = PROVIDER_PREFIX[provider];
     const providerName = PROVIDER_NAMES[provider];
 
@@ -85,26 +96,18 @@ export async function configCommand(existingRl?: readline.Interface): Promise<vo
     let model: string;
 
     if (provider === 'openrouter') {
-      // For OpenRouter, ask the user which model they want
-      const modelInput = await text({
-        message: 'Qual ID do modelo no OpenRouter você quer usar?',
-        placeholder: 'anthropic/claude-4.8-opus',
-        initialValue: currentModel || 'anthropic/claude-4.8-opus',
-        validate: (val: string | undefined) => {
-          if (!val || !val.trim()) return 'O ID do modelo não pode estar vazio.';
-          if (!val.includes('/')) return 'O ID deve seguir o formato provedor/modelo (ex: anthropic/claude-4.8-opus).';
-          return undefined;
-        },
-      });
-
-      if (isCancel(modelInput)) {
-        console.log(chalk.hex('#FF6600')('\n  ▲ Configuração cancelada.'));
-        return;
+      console.log('');
+      console.log(chalk.hex('#555555')('  Exemplos: anthropic/claude-4.8-opus, google/gemini-2.5-pro, meta-llama/llama-4-70b-instruct'));
+      const input = await ask(rl, `\n  ID do modelo no OpenRouter [padrão: ${currentModel || 'anthropic/claude-4.8-opus'}]: `);
+      if (!input) {
+        model = currentModel || 'anthropic/claude-4.8-opus';
+      } else if (!input.includes('/')) {
+        console.log(chalk.hex('#FF6600')('  ▲ Formato inválido. Usei o padrão.'));
+        model = 'anthropic/claude-4.8-opus';
+      } else {
+        model = input;
       }
-
-      model = (modelInput as string).trim();
     } else {
-      // For OpenAI and Anthropic, set the model automatically
       model = PROVIDER_MODELS[provider];
     }
 

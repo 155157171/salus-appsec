@@ -14,6 +14,7 @@ const CONFIG_DIR = join(homedir(), '.salus');
 const CONFIG_PATH = join(CONFIG_DIR, 'config.json');
 
 function ensureSecurePermissions(): void {
+  if (process.platform === 'win32') return;
   try {
     if (existsSync(CONFIG_DIR)) {
       const dirStats = statSync(CONFIG_DIR);
@@ -28,7 +29,7 @@ function ensureSecurePermissions(): void {
       }
     }
   } catch {
-    // Silently ignore permission check failures on unsupported platforms
+    // Silently ignore permission check failures
   }
 }
 
