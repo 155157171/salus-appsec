@@ -7,7 +7,7 @@ import { markedTerminal } from 'marked-terminal';
 import type { TerminalRendererOptions } from 'marked-terminal';
 import { getCredentials } from '../utils/config-store.js';
 import { configCommand } from '../commands/config.js';
-import { runAnalysisCLI, runRedTeamAnalysis, runBlueTeamHardening, runAISecurityAudit, type AnalysisResult } from '../commands/analyze.js';
+import { runAnalysisCLI, runRedTeamAnalysis, runBlueTeamHardening, runAISecurityAudit, runWebSecurityAudit, type AnalysisResult } from '../commands/analyze.js';
 import { applyFix } from '../core/patcher.js';
 
 // ── Red Hacker Theme ──────────────────────────────────────────────
@@ -81,7 +81,7 @@ function showWelcome(): void {
     console.log(chalk.hex(DIM_RED)(`    ◆  ${provider.toUpperCase()} · ${apiKey.slice(0, 12)}...`));
   }
   console.log('');
-  console.log(chalk.hex(ASH)('    /analyze    /redteam    /harden    /aisec'));
+  console.log(chalk.hex(ASH)('    /analyze    /redteam    /harden    /aisec    /websec'));
   console.log(chalk.hex(ASH)('    /config     /help       /exit'));
   console.log('');
 }
@@ -96,7 +96,8 @@ function showHelp(): void {
   console.log(chalk.hex('#FF4444')('  /redteam') + chalk.hex(ASH)('   › mindset ofensivo (kill chain, MITRE ATT&CK)'));
   console.log(chalk.hex('#FF4444')('  /harden ') + chalk.hex(ASH)('   › hardening defensivo (defense-in-depth, CIS)'));
   console.log(chalk.hex('#FF4444')('  /aisec  ') + chalk.hex(ASH)('   › auditoria AI/LLM (OWASP LLM Top 10 2025)'));
-  console.log(chalk.hex('#FF4444')('  /config ') + chalk.hex(ASH)('   › configurar API Key + modelo'));
+  console.log(chalk.hex('#FF4444')('  /websec ') + chalk.hex(ASH)('   › análise web/API (OWASP, SQLi, XSS, SSRF, auth)'));
+  console.log(chalk.hex('#FF4444')('  /config ') + chalk.hex(ASH)('   › configurar provedor + API Key'));
   console.log(chalk.hex('#FF4444')('  /help   ') + chalk.hex(ASH)('   › mostrar esta ajuda'));
   console.log(chalk.hex('#FF4444')('  /exit   ') + chalk.hex(ASH)('   › sair'));
   console.log('');
@@ -145,7 +146,7 @@ function sevBadge(sev: string): string {
 
 async function analysisHandlers(
   rl: readline.Interface,
-  mode: 'vuln' | 'redteam' | 'blueteam' | 'aisec',
+  mode: 'vuln' | 'redteam' | 'blueteam' | 'aisec' | 'websec',
 ): Promise<void> {
   const { provider, apiKey } = getCredentials();
   if (!provider || !apiKey) {
@@ -158,6 +159,7 @@ async function analysisHandlers(
     redteam: { label: 'Mapeando kill chain Red Team...', color: 'red' as const, fn: runRedTeamAnalysis, ok: 'Análise Red Team concluída', empty: 'Nenhum vetor de ataque encontrado', modeLabel: 'mitigação' },
     blueteam: { label: 'Aplicando hardening defensivo...', color: 'red' as const, fn: runBlueTeamHardening, ok: 'Hardening defensivo concluído', empty: 'Sistema adequadamente blindado', modeLabel: 'ação de hardening' },
     aisec: { label: 'Auditando AI/LLM Security...', color: 'red' as const, fn: runAISecurityAudit, ok: 'Auditoria AI/LLM concluída', empty: 'Nenhum risco AI/LLM encontrado', modeLabel: 'correção AI/LLM' },
+    websec: { label: 'Analisando web/API security...', color: 'red' as const, fn: runWebSecurityAudit, ok: 'Análise web/API concluída', empty: 'Nenhuma vulnerabilidade web encontrada', modeLabel: 'correção web' },
   };
 
   const cfg = configs[mode];
@@ -300,6 +302,12 @@ export async function startREPL(): Promise<void> {
 
         if (['/aisec', '/ai'].includes(line)) {
           await analysisHandlers(rl, 'aisec');
+          rl.prompt();
+          return;
+        }
+
+        if (['/websec', '/ws'].includes(line)) {
+          await analysisHandlers(rl, 'websec');
           rl.prompt();
           return;
         }

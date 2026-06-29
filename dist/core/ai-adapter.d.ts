@@ -10,4 +10,5 @@ export declare function analyzeWithAI(provider: string, apiKey: string, contextX
 export declare function analyzeWithRedTeam(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
 export declare function analyzeWithBlueTeam(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
 export declare function analyzeWithAISecurity(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
+export declare function analyzeWithWebSecurity(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
 //# sourceMappingURL=ai-adapter.d.ts.map

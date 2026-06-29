@@ -2,6 +2,7 @@ import { VULNERABILITY_SCAN_PROMPT } from './prompts/vulnerability-scan.js';
 import { RED_TEAM_PROMPT } from './prompts/red-team.js';
 import { BLUE_TEAM_PROMPT } from './prompts/blue-team.js';
 import { AI_SECURITY_PROMPT } from './prompts/ai-security.js';
+import { WEB_SECURITY_PROMPT } from './prompts/web-security.js';
 const VALID_SEVERITIES = new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 const DANGEROUS_CODE_PATTERNS = [
     /child_process/i,
@@ -223,5 +224,12 @@ export async function analyzeWithAISecurity(provider, apiKey, contextXml) {
     if (provider === 'openrouter')
         return callOpenRouter(apiKey, AI_SECURITY_PROMPT, contextXml);
     return callOpenAI(apiKey, AI_SECURITY_PROMPT, contextXml);
+}
+export async function analyzeWithWebSecurity(provider, apiKey, contextXml) {
+    if (provider === 'anthropic')
+        return callAnthropic(apiKey, WEB_SECURITY_PROMPT, contextXml);
+    if (provider === 'openrouter')
+        return callOpenRouter(apiKey, WEB_SECURITY_PROMPT, contextXml);
+    return callOpenAI(apiKey, WEB_SECURITY_PROMPT, contextXml);
 }
 //# sourceMappingURL=ai-adapter.js.map

@@ -2,6 +2,7 @@ import { VULNERABILITY_SCAN_PROMPT } from './prompts/vulnerability-scan.js';
 import { RED_TEAM_PROMPT } from './prompts/red-team.js';
 import { BLUE_TEAM_PROMPT } from './prompts/blue-team.js';
 import { AI_SECURITY_PROMPT } from './prompts/ai-security.js';
+import { WEB_SECURITY_PROMPT } from './prompts/web-security.js';
 
 export interface Vulnerability {
   id_vulnerabilidade: string;
@@ -297,4 +298,14 @@ export async function analyzeWithAISecurity(
   if (provider === 'anthropic') return callAnthropic(apiKey, AI_SECURITY_PROMPT, contextXml);
   if (provider === 'openrouter') return callOpenRouter(apiKey, AI_SECURITY_PROMPT, contextXml);
   return callOpenAI(apiKey, AI_SECURITY_PROMPT, contextXml);
+}
+
+export async function analyzeWithWebSecurity(
+  provider: string,
+  apiKey: string,
+  contextXml: string,
+): Promise<Vulnerability[]> {
+  if (provider === 'anthropic') return callAnthropic(apiKey, WEB_SECURITY_PROMPT, contextXml);
+  if (provider === 'openrouter') return callOpenRouter(apiKey, WEB_SECURITY_PROMPT, contextXml);
+  return callOpenAI(apiKey, WEB_SECURITY_PROMPT, contextXml);
 }

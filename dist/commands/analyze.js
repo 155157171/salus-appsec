@@ -5,7 +5,7 @@ import { spinner, confirm, isCancel, log } from '@clack/prompts';
 import { getCredentials } from '../utils/config-store.js';
 import { audit } from '../utils/logger.js';
 import { scanProject } from '../core/scanner.js';
-import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity } from '../core/ai-adapter.js';
+import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity, analyzeWithWebSecurity } from '../core/ai-adapter.js';
 import { applyFix } from '../core/patcher.js';
 async function runAnalysis(rootDir, mode) {
     const { provider, apiKey } = getCredentials();
@@ -23,6 +23,9 @@ async function runAnalysis(rootDir, mode) {
     else if (mode === 'aisec') {
         vulnerabilities = await analyzeWithAISecurity(provider, apiKey, codeXml);
     }
+    else if (mode === 'websec') {
+        vulnerabilities = await analyzeWithWebSecurity(provider, apiKey, codeXml);
+    }
     else {
         vulnerabilities = await analyzeWithAI(provider, apiKey, codeXml);
     }
@@ -37,6 +40,9 @@ async function runAnalysis(rootDir, mode) {
     }
     else if (mode === 'aisec') {
         filename = 'ai-security-report.md';
+    }
+    else if (mode === 'websec') {
+        filename = 'web-security-report.md';
     }
     else {
         filename = 'security-report.md';
@@ -56,6 +62,9 @@ export async function runBlueTeamHardening(rootDir) {
 }
 export async function runAISecurityAudit(rootDir) {
     return runAnalysis(rootDir, 'aisec');
+}
+export async function runWebSecurityAudit(rootDir) {
+    return runAnalysis(rootDir, 'websec');
 }
 async function applyFixesInteractively(rootDir, vulnerabilities) {
     if (vulnerabilities.length === 0) {
@@ -122,7 +131,9 @@ async function commandRunner(mode, label) {
                     ? await analyzeWithBlueTeam(provider, apiKey, codeXml)
                     : mode === 'aisec'
                         ? await analyzeWithAISecurity(provider, apiKey, codeXml)
-                        : await analyzeWithAI(provider, apiKey, codeXml);
+                        : mode === 'websec'
+                            ? await analyzeWithWebSecurity(provider, apiKey, codeXml)
+                            : await analyzeWithAI(provider, apiKey, codeXml);
     }
     catch (err) {
         s.stop(`Falha na análise: ${err.message}`);
@@ -140,6 +151,9 @@ async function commandRunner(mode, label) {
     }
     else if (mode === 'aisec') {
         filename = 'ai-security-report.md';
+    }
+    else if (mode === 'websec') {
+        filename = 'web-security-report.md';
     }
     else {
         filename = 'security-report.md';
@@ -163,6 +177,9 @@ export async function hardenCommand() {
 export async function aiSecurityCommand() {
     await commandRunner('aisec', 'Analisando segurança AI/LLM (OWASP LLM Top 10)...');
 }
+export async function webSecurityCommand() {
+    await commandRunner('websec', 'Analisando vulnerabilidades web (OWASP, injections, API)...');
+}
 function buildReport(vulnerabilities, mode) {
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
     let title;
@@ -182,6 +199,11 @@ function buildReport(vulnerabilities, mode) {
         title = 'Relatório de AI/LLM Security — Salus';
         subtitle = '**Motor:** AI_SECURITY_PROMPT (OWASP LLM Top 10 2025, MITRE ATLAS)';
         emptyMessage = 'A IA não identificou riscos de AI/LLM security.\n\n';
+    }
+    else if (mode === 'websec') {
+        title = 'Relatório de Web Security — Salus';
+        subtitle = '**Motor:** WEB_SECURITY_PROMPT (OWASP Top 10, API Security, Injection Testing)';
+        emptyMessage = 'A IA não identificou vulnerabilidades web no código analisado.\n\n';
     }
     else {
         title = 'Relatório de Segurança — Salus';

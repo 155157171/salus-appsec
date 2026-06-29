@@ -5,7 +5,7 @@ import { spinner, confirm, isCancel, log } from '@clack/prompts';
 import { getCredentials } from '../utils/config-store.js';
 import { audit } from '../utils/logger.js';
 import { scanProject } from '../core/scanner.js';
-import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity, type Vulnerability } from '../core/ai-adapter.js';
+import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity, analyzeWithWebSecurity, type Vulnerability } from '../core/ai-adapter.js';
 import { applyFix } from '../core/patcher.js';
 
 export type { Vulnerability };
@@ -16,7 +16,7 @@ export interface AnalysisResult {
   rawResponse: string;
 }
 
-type AnalysisMode = 'vuln' | 'redteam' | 'blueteam' | 'aisec';
+type AnalysisMode = 'vuln' | 'redteam' | 'blueteam' | 'aisec' | 'websec';
 
 async function runAnalysis(
   rootDir: string,
@@ -36,6 +36,8 @@ async function runAnalysis(
     vulnerabilities = await analyzeWithBlueTeam(provider, apiKey, codeXml);
   } else if (mode === 'aisec') {
     vulnerabilities = await analyzeWithAISecurity(provider, apiKey, codeXml);
+  } else if (mode === 'websec') {
+    vulnerabilities = await analyzeWithWebSecurity(provider, apiKey, codeXml);
   } else {
     vulnerabilities = await analyzeWithAI(provider, apiKey, codeXml);
   }
@@ -50,6 +52,8 @@ async function runAnalysis(
     filename = 'defense-hardening-report.md';
   } else if (mode === 'aisec') {
     filename = 'ai-security-report.md';
+  } else if (mode === 'websec') {
+    filename = 'web-security-report.md';
   } else {
     filename = 'security-report.md';
   }
@@ -73,6 +77,10 @@ export async function runBlueTeamHardening(rootDir: string): Promise<AnalysisRes
 
 export async function runAISecurityAudit(rootDir: string): Promise<AnalysisResult> {
   return runAnalysis(rootDir, 'aisec');
+}
+
+export async function runWebSecurityAudit(rootDir: string): Promise<AnalysisResult> {
+  return runAnalysis(rootDir, 'websec');
 }
 
 async function applyFixesInteractively(
@@ -156,7 +164,9 @@ async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
           ? await analyzeWithBlueTeam(provider, apiKey, codeXml)
           : mode === 'aisec'
             ? await analyzeWithAISecurity(provider, apiKey, codeXml)
-            : await analyzeWithAI(provider, apiKey, codeXml);
+            : mode === 'websec'
+              ? await analyzeWithWebSecurity(provider, apiKey, codeXml)
+              : await analyzeWithAI(provider, apiKey, codeXml);
   } catch (err) {
     s.stop(`Falha na análise: ${(err as Error).message}`);
     process.exit(1);
@@ -174,6 +184,8 @@ async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
     filename = 'defense-hardening-report.md';
   } else if (mode === 'aisec') {
     filename = 'ai-security-report.md';
+  } else if (mode === 'websec') {
+    filename = 'web-security-report.md';
   } else {
     filename = 'security-report.md';
   }
@@ -204,6 +216,10 @@ export async function aiSecurityCommand(): Promise<void> {
   await commandRunner('aisec', 'Analisando segurança AI/LLM (OWASP LLM Top 10)...');
 }
 
+export async function webSecurityCommand(): Promise<void> {
+  await commandRunner('websec', 'Analisando vulnerabilidades web (OWASP, injections, API)...');
+}
+
 function buildReport(vulnerabilities: Vulnerability[], mode: AnalysisMode): string {
   const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
@@ -223,6 +239,10 @@ function buildReport(vulnerabilities: Vulnerability[], mode: AnalysisMode): stri
     title = 'Relatório de AI/LLM Security — Salus';
     subtitle = '**Motor:** AI_SECURITY_PROMPT (OWASP LLM Top 10 2025, MITRE ATLAS)';
     emptyMessage = 'A IA não identificou riscos de AI/LLM security.\n\n';
+  } else if (mode === 'websec') {
+    title = 'Relatório de Web Security — Salus';
+    subtitle = '**Motor:** WEB_SECURITY_PROMPT (OWASP Top 10, API Security, Injection Testing)';
+    emptyMessage = 'A IA não identificou vulnerabilidades web no código analisado.\n\n';
   } else {
     title = 'Relatório de Segurança — Salus';
     subtitle = '**Motor:** VULNERABILITY_SCAN_PROMPT (CVSS 4.0, EPSS, KEV)';

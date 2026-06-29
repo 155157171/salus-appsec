@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { configCommand } from './commands/config.js';
-import { analyzeCommand, redTeamCommand, hardenCommand, aiSecurityCommand } from './commands/analyze.js';
+import { analyzeCommand, redTeamCommand, hardenCommand, aiSecurityCommand, webSecurityCommand } from './commands/analyze.js';
 import { startREPL } from './ui/repl.js';
 const program = new Command();
 program
@@ -17,11 +17,13 @@ program
     '  $ salus redteam          Análise ofensiva (kill chain, MITRE ATT&CK)\n' +
     '  $ salus harden           Hardening defensivo (defense-in-depth, CIS)\n' +
     '  $ salus aisec            Auditoria de segurança AI/LLM (OWASP Top 10)\n' +
+    '  $ salus websec           Análise de segurança web/API (OWASP, injection)\n' +
     '\nSAÍDA: Cada comando gera um relatório Markdown na raiz do projeto.\n' +
     '  analyze → security-report.md\n' +
     '  redteam → red-team-report.md\n' +
     '  harden  → defense-hardening-report.md\n' +
-    '  aisec   → ai-security-report.md\n');
+    '  aisec   → ai-security-report.md\n' +
+    '  websec  → web-security-report.md\n');
 program
     .command('config')
     .description('Configura o provedor LLM e a API Key.\n' +
@@ -109,6 +111,23 @@ program
     }
 });
 program
+    .command('websec')
+    .description('Análise de segurança para aplicações web e APIs.\n' +
+    'Motor: WEB_SECURITY_PROMPT.\n' +
+    'Foco: OWASP Top 10 (2021), SQL Injection, XSS, SSRF, SSTI, Command Injection,\n' +
+    'IDOR/BOLA, mass assignment, auth bypass, payment bypass, privilege escalation,\n' +
+    'JWT attacks, CORS/CSP misconfiguration, GraphQL security, race conditions.\n' +
+    'Gera web-security-report.md e sugere correções para cada vulnerabilidade.')
+    .action(async () => {
+    try {
+        await webSecurityCommand();
+    }
+    catch (err) {
+        console.error(err);
+        process.exit(1);
+    }
+});
+program
     .command('repl', { isDefault: true })
     .description('Terminal interativo contínuo (REPL) do Salus.\n' +
     'Comandos internos:\n' +
@@ -116,6 +135,7 @@ program
     '  /redteam  ou /rt  — análise ofensiva Red Team\n' +
     '  /harden   ou /hd  — hardening defensivo Blue Team\n' +
     '  /aisec    ou /ai  — auditoria AI/LLM Security\n' +
+    '  /websec   ou /ws  — análise web/API security\n' +
     '  /config   ou /c   — configurar API Key\n' +
     '  /help     ou /h   — mostrar ajuda\n' +
     '  /exit     ou /q   — sair\n' +
