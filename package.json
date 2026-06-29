@@ -8,14 +8,16 @@
     "salus": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "scripts"
   ],
   "scripts": {
     "build": "tsc",
     "prebuild": "node --input-type=commonjs -e \"const fs=require('fs');if(!fs.existsSync('dist'))fs.mkdirSync('dist')\"",
     "audit": "npm audit --audit-level=high",
     "audit:fix": "npm audit fix",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/postinstall.js"
   },
   "keywords": [
     "appsec",
