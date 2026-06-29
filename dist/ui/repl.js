@@ -103,7 +103,9 @@ function renderMarkdown(md) {
 // ── Prompt helper ─────────────────────────────────────────────────
 async function ask(rl, query) {
     return new Promise((resolve) => {
+        rl.pause();
         rl.question(query, (answer) => {
+            rl.resume();
             resolve(answer.trim());
         });
     });
@@ -271,6 +273,7 @@ export async function startREPL() {
                 if (['/config', '/c'].includes(line)) {
                     rl.close();
                     await new Promise(r => rl.on('close', r));
+                    await new Promise(r => setTimeout(r, 150));
                     await handleConfig();
                     resolve('restart');
                     return;

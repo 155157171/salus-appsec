@@ -118,7 +118,9 @@ function renderMarkdown(md: string): string {
 
 async function ask(rl: readline.Interface, query: string): Promise<string> {
   return new Promise((resolve) => {
+    rl.pause();
     rl.question(query, (answer) => {
+      rl.resume();
       resolve(answer.trim());
     });
   });
@@ -325,6 +327,7 @@ export async function startREPL(): Promise<void> {
         if (['/config', '/c'].includes(line)) {
           rl.close();
           await new Promise<void>(r => rl.on('close', r));
+          await new Promise(r => setTimeout(r, 150));
           await handleConfig();
           resolve('restart');
           return;

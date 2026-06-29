@@ -27,8 +27,14 @@ const PROVIDER_LIST = [
 ];
 
 function ask(rl: readline.Interface, query: string): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const onSigint = () => {
+      rl.removeListener('SIGINT', onSigint);
+      reject(new Error('Configuração cancelada.'));
+    };
+    rl.on('SIGINT', onSigint);
     rl.question(query, (answer) => {
+      rl.removeListener('SIGINT', onSigint);
       resolve(answer.trim());
     });
   });

@@ -22,8 +22,14 @@ const PROVIDER_LIST = [
     { value: 'openrouter', name: 'OpenRouter', hint: 'Multi-modelo' },
 ];
 function ask(rl, query) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        const onSigint = () => {
+            rl.removeListener('SIGINT', onSigint);
+            reject(new Error('Configuração cancelada.'));
+        };
+        rl.on('SIGINT', onSigint);
         rl.question(query, (answer) => {
+            rl.removeListener('SIGINT', onSigint);
             resolve(answer.trim());
         });
     });
