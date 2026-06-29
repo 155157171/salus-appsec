@@ -34,9 +34,9 @@ program
 program
   .command('config')
   .description(
-    'Configura a API Key da OpenAI e o modelo LLM.\n' +
-    'A chave é armazenada localmente em ~/.salus/config.json.\n' +
-    'Modelos disponíveis: gpt-4o (recomendado), gpt-4o-mini, gpt-4-turbo, o3-mini.',
+    'Configura o provedor LLM e a API Key.\n' +
+    'Provedores suportados: OpenAI, Anthropic, OpenRouter.\n' +
+    'A chave é armazenada localmente em ~/.salus/config.json.',
   )
   .action(async () => {
     try {

@@ -2,29 +2,29 @@ import { resolve } from 'path';
 import { writeFileSync } from 'fs';
 import chalk from 'chalk';
 import { spinner, confirm, isCancel, log } from '@clack/prompts';
-import { getApiKey } from '../utils/config-store.js';
+import { getCredentials } from '../utils/config-store.js';
 import { audit } from '../utils/logger.js';
 import { scanProject } from '../core/scanner.js';
 import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISecurity } from '../core/ai-adapter.js';
 import { applyFix } from '../core/patcher.js';
 async function runAnalysis(rootDir, mode) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        throw new Error('API Key não configurada. Use /config para configurar.');
+    const { provider, apiKey } = getCredentials();
+    if (!provider || !apiKey) {
+        throw new Error('Nenhum provedor configurado. Execute "salus config" primeiro.');
     }
     const codeXml = await scanProject(rootDir);
     let vulnerabilities;
     if (mode === 'redteam') {
-        vulnerabilities = await analyzeWithRedTeam(apiKey, codeXml);
+        vulnerabilities = await analyzeWithRedTeam(provider, apiKey, codeXml);
     }
     else if (mode === 'blueteam') {
-        vulnerabilities = await analyzeWithBlueTeam(apiKey, codeXml);
+        vulnerabilities = await analyzeWithBlueTeam(provider, apiKey, codeXml);
     }
     else if (mode === 'aisec') {
-        vulnerabilities = await analyzeWithAISecurity(apiKey, codeXml);
+        vulnerabilities = await analyzeWithAISecurity(provider, apiKey, codeXml);
     }
     else {
-        vulnerabilities = await analyzeWithAI(apiKey, codeXml);
+        vulnerabilities = await analyzeWithAI(provider, apiKey, codeXml);
     }
     const rawJson = JSON.stringify(vulnerabilities, null, 2);
     const markdownReport = buildReport(vulnerabilities, mode);
@@ -95,13 +95,13 @@ async function applyFixesInteractively(rootDir, vulnerabilities) {
     }
 }
 async function commandRunner(mode, label) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        log.error('API Key não configurada. Execute primeiro: salus config');
+    const { provider, apiKey } = getCredentials();
+    if (!provider || !apiKey) {
+        log.error('Nenhum provedor configurado. Execute primeiro: salus config');
         process.exit(1);
     }
     const rootDir = process.cwd();
-    audit(`analysis:start mode=${mode} dir=${rootDir}`);
+    audit(`analysis:start mode=${mode} dir=${rootDir} provider=${provider}`);
     const s = spinner();
     s.start('Mapeando arquitetura e arquivos...');
     let codeXml;
@@ -117,12 +117,12 @@ async function commandRunner(mode, label) {
     try {
         vulnerabilities =
             mode === 'redteam'
-                ? await analyzeWithRedTeam(apiKey, codeXml)
+                ? await analyzeWithRedTeam(provider, apiKey, codeXml)
                 : mode === 'blueteam'
-                    ? await analyzeWithBlueTeam(apiKey, codeXml)
+                    ? await analyzeWithBlueTeam(provider, apiKey, codeXml)
                     : mode === 'aisec'
-                        ? await analyzeWithAISecurity(apiKey, codeXml)
-                        : await analyzeWithAI(apiKey, codeXml);
+                        ? await analyzeWithAISecurity(provider, apiKey, codeXml)
+                        : await analyzeWithAI(provider, apiKey, codeXml);
     }
     catch (err) {
         s.stop(`Falha na análise: ${err.message}`);

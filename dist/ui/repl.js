@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { marked } from 'marked';
 import { markedTerminal } from 'marked-terminal';
-import { getApiKey, getModel } from '../utils/config-store.js';
+import { getCredentials } from '../utils/config-store.js';
 import { configCommand } from '../commands/config.js';
 import { runAnalysisCLI, runRedTeamAnalysis, runBlueTeamHardening, runAISecurityAudit } from '../commands/analyze.js';
 import { applyFix } from '../core/patcher.js';
@@ -61,14 +61,14 @@ function showWelcome() {
         console.log(chalk.hex(RED)(line));
     }
     console.log(chalk.hex('#FF4444').bold('    [ AppSec · BYOK · Code Review · Auto-Fix ]'));
-    console.log(chalk.hex(ASH)('    Bring Your Own Key — OpenAI'));
+    console.log(chalk.hex(ASH)('    Bring Your Own Key — OpenAI · Anthropic · OpenRouter'));
     console.log('');
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        console.log(chalk.hex(WARN)(`    ▲  API Key não configurada — /config`));
+    const { provider, apiKey } = getCredentials();
+    if (!provider) {
+        console.log(chalk.hex(WARN)(`    ▲  Nenhum provedor configurado — /config`));
     }
     else {
-        console.log(chalk.hex(DIM_RED)(`    ◆  Key: ${apiKey.slice(0, 10)}...  ·  ${getModel()}`));
+        console.log(chalk.hex(DIM_RED)(`    ◆  ${provider.toUpperCase()} · ${apiKey.slice(0, 12)}...`));
     }
     console.log('');
     console.log(chalk.hex(ASH)('    /analyze    /redteam    /harden    /aisec'));
@@ -127,9 +127,9 @@ function sevBadge(sev) {
 }
 // ── Shared analysis handler ───────────────────────────────────────
 async function analysisHandlers(rl, mode) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        console.log(chalk.hex('#FF0000')('\n  ╳  API Key não configurada — use /config\n'));
+    const { provider, apiKey } = getCredentials();
+    if (!provider || !apiKey) {
+        console.log(chalk.hex('#FF0000')('\n  ╳  Nenhum provedor configurado — use /config\n'));
         return;
     }
     const configs = {

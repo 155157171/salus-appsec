@@ -6,8 +6,8 @@ export interface Vulnerability {
     codigo_antigo: string;
     codigo_novo_sugerido: string;
 }
-export declare function analyzeWithAI(apiKey: string, contextXml: string): Promise<Vulnerability[]>;
-export declare function analyzeWithRedTeam(apiKey: string, contextXml: string): Promise<Vulnerability[]>;
-export declare function analyzeWithBlueTeam(apiKey: string, contextXml: string): Promise<Vulnerability[]>;
-export declare function analyzeWithAISecurity(apiKey: string, contextXml: string): Promise<Vulnerability[]>;
+export declare function analyzeWithAI(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
+export declare function analyzeWithRedTeam(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
+export declare function analyzeWithBlueTeam(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
+export declare function analyzeWithAISecurity(provider: string, apiKey: string, contextXml: string): Promise<Vulnerability[]>;
 //# sourceMappingURL=ai-adapter.d.ts.map

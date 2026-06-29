@@ -2,7 +2,10 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'fs
 import { join } from 'path';
 import { homedir } from 'os';
 
+type Provider = 'openai' | 'anthropic' | 'openrouter';
+
 interface ConfigData {
+  provider: Provider | '';
   apiKey: string;
   model: string;
 }
@@ -32,12 +35,28 @@ function ensureSecurePermissions(): void {
 function readConfig(): ConfigData {
   try {
     if (!existsSync(CONFIG_PATH)) {
-      return { apiKey: '', model: 'gpt-4o' };
+      return { provider: '', apiKey: '', model: 'gpt-4o' };
     }
     const raw = readFileSync(CONFIG_PATH, 'utf-8');
-    return JSON.parse(raw) as ConfigData;
+    const parsed = JSON.parse(raw) as Partial<ConfigData>;
+
+    // Migration: if apiKey exists but provider doesn't, default to openai
+    if (parsed.apiKey && !parsed.provider) {
+      parsed.provider = 'openai';
+      writeFileSync(CONFIG_PATH, JSON.stringify({
+        provider: parsed.provider,
+        apiKey: parsed.apiKey,
+        model: parsed.model || 'gpt-4o',
+      }, null, 2), { encoding: 'utf-8', mode: 0o600 });
+    }
+
+    return {
+      provider: (parsed.provider as ConfigData['provider']) || '',
+      apiKey: parsed.apiKey || '',
+      model: parsed.model || 'gpt-4o',
+    };
   } catch {
-    return { apiKey: '', model: 'gpt-4o' };
+    return { provider: '', apiKey: '', model: 'gpt-4o' };
   }
 }
 
@@ -46,6 +65,29 @@ function writeConfig(data: ConfigData): void {
     mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
   }
   writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
+}
+
+export function setCredentials(provider: Provider, apiKey: string): void {
+  const config = readConfig();
+  config.provider = provider;
+  config.apiKey = apiKey;
+  writeConfig(config);
+}
+
+export function getCredentials(): { provider: string; apiKey: string } {
+  ensureSecurePermissions();
+  const config = readConfig();
+  return { provider: config.provider, apiKey: config.apiKey };
+}
+
+export function setProvider(provider: Provider): void {
+  const config = readConfig();
+  config.provider = provider;
+  writeConfig(config);
+}
+
+export function getProvider(): string {
+  return readConfig().provider;
 }
 
 export function setApiKey(key: string): void {

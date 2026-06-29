@@ -25,13 +25,27 @@ function ensureSecurePermissions() {
 function readConfig() {
     try {
         if (!existsSync(CONFIG_PATH)) {
-            return { apiKey: '', model: 'gpt-4o' };
+            return { provider: '', apiKey: '', model: 'gpt-4o' };
         }
         const raw = readFileSync(CONFIG_PATH, 'utf-8');
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        // Migration: if apiKey exists but provider doesn't, default to openai
+        if (parsed.apiKey && !parsed.provider) {
+            parsed.provider = 'openai';
+            writeFileSync(CONFIG_PATH, JSON.stringify({
+                provider: parsed.provider,
+                apiKey: parsed.apiKey,
+                model: parsed.model || 'gpt-4o',
+            }, null, 2), { encoding: 'utf-8', mode: 0o600 });
+        }
+        return {
+            provider: parsed.provider || '',
+            apiKey: parsed.apiKey || '',
+            model: parsed.model || 'gpt-4o',
+        };
     }
     catch {
-        return { apiKey: '', model: 'gpt-4o' };
+        return { provider: '', apiKey: '', model: 'gpt-4o' };
     }
 }
 function writeConfig(data) {
@@ -39,6 +53,25 @@ function writeConfig(data) {
         mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
     }
     writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
+}
+export function setCredentials(provider, apiKey) {
+    const config = readConfig();
+    config.provider = provider;
+    config.apiKey = apiKey;
+    writeConfig(config);
+}
+export function getCredentials() {
+    ensureSecurePermissions();
+    const config = readConfig();
+    return { provider: config.provider, apiKey: config.apiKey };
+}
+export function setProvider(provider) {
+    const config = readConfig();
+    config.provider = provider;
+    writeConfig(config);
+}
+export function getProvider() {
+    return readConfig().provider;
 }
 export function setApiKey(key) {
     const config = readConfig();
