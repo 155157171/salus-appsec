@@ -55,11 +55,11 @@ npm install -g salus-appsec
 
 Salus soporta **3 proveedores de LLM** — elige el tuyo:
 
-| Proveedor | Prefijo | Modelos |
-|-----------|---------|---------|
-| **OpenAI** | `sk-proj-...` | gpt-4.1, gpt-4.1-mini |
-| **Anthropic** | `sk-ant-...` | claude-sonnet-4-20250514 |
-| **OpenRouter** | `sk-or-...` | anthropic/claude-sonnet-4 |
+| Proveedor | Prefijo | Modelo Por Defecto |
+|-----------|---------|--------------------|
+| **OpenAI** | `sk-proj-...` | `gpt-5.5-pro` |
+| **Anthropic** | `sk-ant-...` | `claude-4-8-opus-latest` |
+| **OpenRouter** | `sk-or-...` | Seleccionable por el usuario (ej: `anthropic/claude-4.8-opus`, `google/gemini-2.5-pro`, `meta-llama/llama-4-70b-instruct`) |
 
 La clave se almacena en `~/.salus/config.json` con permisos restrictivos (`0700`/`0600`).
 
