@@ -28,7 +28,7 @@ const PROVIDER_LIST = [
 
 function ask(rl: readline.Interface, query: string): Promise<string> {
   return new Promise((resolve) => {
-    rl.question(chalk.hex('#FF4444')(query), (answer) => {
+    rl.question(query, (answer) => {
       resolve(answer.trim());
     });
   });

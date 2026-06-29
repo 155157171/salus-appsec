@@ -103,7 +103,7 @@ function renderMarkdown(md) {
 // ── Prompt helper ─────────────────────────────────────────────────
 async function ask(rl, query) {
     return new Promise((resolve) => {
-        rl.question(chalk.hex('#FF4444')(query), (answer) => {
+        rl.question(query, (answer) => {
             resolve(answer.trim());
         });
     });
@@ -203,9 +203,9 @@ async function analysisHandlers(rl, mode) {
     console.log(chalk.hex('#FF3333')(`  ◆  Processo finalizado.\n`));
 }
 // ── Config Handler ────────────────────────────────────────────────
-async function handleConfig(rl) {
+async function handleConfig() {
     try {
-        await configCommand(rl);
+        await configCommand();
     }
     catch (err) {
         console.log(chalk.hex('#FF0000')(`  ╳  ${err.message}`));
@@ -269,8 +269,10 @@ export async function startREPL() {
                     return;
                 }
                 if (['/config', '/c'].includes(line)) {
-                    await handleConfig(rl);
-                    rl.prompt();
+                    rl.close();
+                    await new Promise(r => rl.on('close', r));
+                    await handleConfig();
+                    resolve('restart');
                     return;
                 }
                 if (line.startsWith('/')) {

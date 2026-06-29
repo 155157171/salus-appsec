@@ -118,7 +118,7 @@ function renderMarkdown(md: string): string {
 
 async function ask(rl: readline.Interface, query: string): Promise<string> {
   return new Promise((resolve) => {
-    rl.question(chalk.hex('#FF4444')(query), (answer) => {
+    rl.question(query, (answer) => {
       resolve(answer.trim());
     });
   });
@@ -244,9 +244,9 @@ async function analysisHandlers(
 
 // ── Config Handler ────────────────────────────────────────────────
 
-async function handleConfig(rl: readline.Interface): Promise<void> {
+async function handleConfig(): Promise<void> {
   try {
-    await configCommand(rl);
+    await configCommand();
   } catch (err) {
     console.log(chalk.hex('#FF0000')(`  ╳  ${(err as Error).message}`));
   }
@@ -323,8 +323,10 @@ export async function startREPL(): Promise<void> {
         }
 
         if (['/config', '/c'].includes(line)) {
-          await handleConfig(rl);
-          rl.prompt();
+          rl.close();
+          await new Promise<void>(r => rl.on('close', r));
+          await handleConfig();
+          resolve('restart');
           return;
         }
 
