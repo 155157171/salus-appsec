@@ -104,7 +104,7 @@ async function callOpenAI(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: makeBoundaryContent(contextXml) },
@@ -162,7 +162,7 @@ async function callOpenRouter(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'anthropic/claude-sonnet-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: makeBoundaryContent(contextXml) },
@@ -222,7 +222,7 @@ async function callAnthropic(
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 8192,
         system: systemPrompt,
         messages: [{ role: 'user', content: makeBoundaryContent(contextXml) }],

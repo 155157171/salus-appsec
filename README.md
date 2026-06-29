@@ -57,9 +57,9 @@ Salus supports **3 LLM providers** — choose the one you prefer:
 
 | Provider | Prefix | Models |
 |----------|--------|--------|
-| **OpenAI** | `sk-proj-...` | gpt-4o, gpt-4o-mini |
-| **Anthropic** | `sk-ant-...` | claude-3-5-sonnet |
-| **OpenRouter** | `sk-or-...` | anthropic/claude-3.5-sonnet |
+| **OpenAI** | `sk-proj-...` | gpt-4.1, gpt-4.1-mini |
+| **Anthropic** | `sk-ant-...` | claude-sonnet-4-20250514 |
+| **OpenRouter** | `sk-or-...` | anthropic/claude-sonnet-4 |
 
 The key is stored locally in `~/.salus/config.json` with restrictive permissions (`0700`/`0600`).
 

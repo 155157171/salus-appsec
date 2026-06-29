@@ -57,9 +57,9 @@ Salus suporta **3 provedores de LLM** — escolha o seu:
 
 | Provedor | Prefixo | Modelos |
 |----------|---------|---------|
-| **OpenAI** | `sk-proj-...` | gpt-4o, gpt-4o-mini |
-| **Anthropic** | `sk-ant-...` | claude-3-5-sonnet |
-| **OpenRouter** | `sk-or-...` | anthropic/claude-3.5-sonnet |
+| **OpenAI** | `sk-proj-...` | gpt-4.1, gpt-4.1-mini |
+| **Anthropic** | `sk-ant-...` | claude-sonnet-4-20250514 |
+| **OpenRouter** | `sk-or-...` | anthropic/claude-sonnet-4 |
 
 A chave é armazenada em `~/.salus/config.json` com permissões restritas (`0700`/`0600`).
 
