@@ -29,9 +29,29 @@ const DANGEROUS_CODE_PATTERNS = [
 
 function cleanJsonResponse(raw: string): string {
   return raw
-    .replace(/^```(?:json)?\s*\n?/i, '')
-    .replace(/\n?\s*```$/, '')
+    .replace(/^[\s\n]*```(?:json)?\s*\n?/i, '')
+    .replace(/\n?\s*```[\s\n]*$/i, '')
     .trim();
+}
+
+function parseAndValidate(rawContent: string): Vulnerability[] {
+  const cleaned = cleanJsonResponse(rawContent);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('Falha ao processar resposta da IA: JSON inválido. Tente novamente.');
+  }
+  return validateOutput(parsed);
+}
+
+function handleFetchError(status: number, errBody: string): never {
+  if (status === 401) throw new Error('API Key inválida. Execute "salus config" para reconfigurar.');
+  if (status === 429 || status === 529) throw new Error('Rate limit excedido. Aguarde alguns segundos e tente novamente.');
+  if (status === 402) throw new Error('Créditos insuficientes no provedor.');
+  if (status === 403) throw new Error('Acesso negado. Verifique sua API Key e permissões.');
+  if (status >= 500) throw new Error(`Erro interno do provedor (HTTP ${status}). Tente novamente.`);
+  throw new Error(`Erro na API (HTTP ${status}).`);
 }
 
 function validateOutput(raw: unknown): Vulnerability[] {
@@ -118,9 +138,7 @@ async function callOpenAI(
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '');
-      if (response.status === 401) throw new Error('OpenAI: API Key inválida.');
-      if (response.status === 429) throw new Error('OpenAI: rate limit excedido. Aguarde.');
-      throw new Error(`OpenAI HTTP ${response.status}: ${errBody.slice(0, 200)}`);
+      handleFetchError(response.status, errBody);
     }
 
     const data = (await response.json()) as {
@@ -128,7 +146,7 @@ async function callOpenAI(
       usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
     };
 
-    if (!data.choices?.length) throw new Error('OpenAI não retornou escolhas.');
+    if (!data.choices?.length) throw new Error('O provedor não retornou resultado. Tente novamente.');
 
     if (data.usage) {
       console.log(
@@ -137,9 +155,12 @@ async function callOpenAI(
       );
     }
 
-    const rawContent = data.choices[0].message.content;
-    const cleaned = cleanJsonResponse(rawContent);
-    return validateOutput(JSON.parse(cleaned));
+    return parseAndValidate(data.choices[0].message.content);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Timeout: a análise excedeu o tempo limite de 2 minutos. Tente com um projeto menor.');
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }
@@ -177,10 +198,7 @@ async function callOpenRouter(
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '');
-      if (response.status === 401) throw new Error('OpenRouter: API Key inválida.');
-      if (response.status === 402) throw new Error('OpenRouter: créditos insuficientes.');
-      if (response.status === 429) throw new Error('OpenRouter: rate limit excedido.');
-      throw new Error(`OpenRouter HTTP ${response.status}: ${errBody.slice(0, 200)}`);
+      handleFetchError(response.status, errBody);
     }
 
     const data = (await response.json()) as {
@@ -188,7 +206,7 @@ async function callOpenRouter(
       usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
     };
 
-    if (!data.choices?.length) throw new Error('OpenRouter não retornou escolhas.');
+    if (!data.choices?.length) throw new Error('O provedor não retornou resultado. Tente novamente.');
 
     if (data.usage) {
       console.log(
@@ -197,9 +215,12 @@ async function callOpenRouter(
       );
     }
 
-    const rawContent = data.choices[0].message.content;
-    const cleaned = cleanJsonResponse(rawContent);
-    return validateOutput(JSON.parse(cleaned));
+    return parseAndValidate(data.choices[0].message.content);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Timeout: a análise excedeu o tempo limite de 2 minutos. Tente com um projeto menor.');
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }
@@ -235,9 +256,7 @@ async function callAnthropic(
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '');
-      if (response.status === 401) throw new Error('Anthropic: API Key inválida.');
-      if (response.status === 429) throw new Error('Anthropic: rate limit excedido.');
-      throw new Error(`Anthropic HTTP ${response.status}: ${errBody.slice(0, 200)}`);
+      handleFetchError(response.status, errBody);
     }
 
     const data = (await response.json()) as {
@@ -245,7 +264,7 @@ async function callAnthropic(
       usage?: { input_tokens: number; output_tokens: number };
     };
 
-    if (!data.content?.length) throw new Error('Anthropic não retornou conteúdo.');
+    if (!data.content?.length) throw new Error('O provedor não retornou conteúdo. Tente novamente.');
 
     if (data.usage) {
       console.log(
@@ -254,9 +273,12 @@ async function callAnthropic(
       );
     }
 
-    const rawContent = data.content[0].text;
-    const cleaned = cleanJsonResponse(rawContent);
-    return validateOutput(JSON.parse(cleaned));
+    return parseAndValidate(data.content[0].text);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Timeout: a análise excedeu o tempo limite de 2 minutos. Tente com um projeto menor.');
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }

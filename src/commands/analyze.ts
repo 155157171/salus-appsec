@@ -23,8 +23,8 @@ async function runAnalysis(
   mode: AnalysisMode,
 ): Promise<AnalysisResult> {
   const { provider, apiKey, model } = getCredentials();
-  if (!provider || !apiKey) {
-    throw new Error('Nenhum provedor configurado. Execute "salus config" primeiro.');
+  if (!provider || !apiKey || !model) {
+    throw new Error('Configuração incompleta. Execute "salus config" primeiro.');
   }
 
   const codeXml = await scanProject(rootDir);
@@ -165,8 +165,8 @@ async function applyFixesInteractively(
 
 async function commandRunner(mode: AnalysisMode, label: string): Promise<void> {
   const { provider, apiKey, model } = getCredentials();
-  if (!provider || !apiKey) {
-    log.error('Nenhum provedor configurado. Execute primeiro: salus config');
+  if (!provider || !apiKey || !model) {
+    log.error('Configuração incompleta (provider, apiKey ou model ausente). Execute: salus config');
     process.exit(1);
   }
 

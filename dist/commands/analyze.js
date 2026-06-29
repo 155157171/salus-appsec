@@ -9,8 +9,8 @@ import { analyzeWithAI, analyzeWithRedTeam, analyzeWithBlueTeam, analyzeWithAISe
 import { applyFix } from '../core/patcher.js';
 async function runAnalysis(rootDir, mode) {
     const { provider, apiKey, model } = getCredentials();
-    if (!provider || !apiKey) {
-        throw new Error('Nenhum provedor configurado. Execute "salus config" primeiro.');
+    if (!provider || !apiKey || !model) {
+        throw new Error('Configuração incompleta. Execute "salus config" primeiro.');
     }
     const codeXml = await scanProject(rootDir);
     let vulnerabilities;
@@ -135,8 +135,8 @@ async function applyFixesInteractively(rootDir, vulnerabilities) {
 }
 async function commandRunner(mode, label) {
     const { provider, apiKey, model } = getCredentials();
-    if (!provider || !apiKey) {
-        log.error('Nenhum provedor configurado. Execute primeiro: salus config');
+    if (!provider || !apiKey || !model) {
+        log.error('Configuração incompleta (provider, apiKey ou model ausente). Execute: salus config');
         process.exit(1);
     }
     const rootDir = process.cwd();

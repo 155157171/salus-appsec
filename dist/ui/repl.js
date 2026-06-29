@@ -131,9 +131,9 @@ function sevBadge(sev) {
 }
 // ── Shared analysis handler ───────────────────────────────────────
 async function analysisHandlers(rl, mode) {
-    const { provider, apiKey } = getCredentials();
-    if (!provider || !apiKey) {
-        console.log(chalk.hex('#FF0000')('\n  ╳  Nenhum provedor configurado — use /config\n'));
+    const { provider, apiKey, model } = getCredentials();
+    if (!provider || !apiKey || !model) {
+        console.log(chalk.hex('#FF0000')('\n  ╳  Configuração incompleta — use /config\n'));
         return;
     }
     const configs = {

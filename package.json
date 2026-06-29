@@ -8,16 +8,14 @@
     "salus": "./dist/index.js"
   },
   "files": [
-    "dist",
-    "scripts"
+    "dist"
   ],
   "scripts": {
     "build": "tsc",
     "prebuild": "node --input-type=commonjs -e \"const fs=require('fs');if(!fs.existsSync('dist'))fs.mkdirSync('dist')\"",
     "audit": "npm audit --audit-level=high",
     "audit:fix": "npm audit fix",
-    "prepublishOnly": "npm run build",
-    "postinstall": "node scripts/postinstall.js"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "appsec",
@@ -54,7 +52,6 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.6.0",
-    "@inquirer/prompts": "^7.6.0",
     "chalk": "^4.1.2",
     "commander": "^13.1.0",
     "fast-glob": "^3.3.3",

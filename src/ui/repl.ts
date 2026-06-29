@@ -151,9 +151,9 @@ async function analysisHandlers(
   rl: readline.Interface,
   mode: 'vuln' | 'redteam' | 'blueteam' | 'aisec' | 'websec',
 ): Promise<void> {
-  const { provider, apiKey } = getCredentials();
-  if (!provider || !apiKey) {
-    console.log(chalk.hex('#FF0000')('\n  ╳  Nenhum provedor configurado — use /config\n'));
+  const { provider, apiKey, model } = getCredentials();
+  if (!provider || !apiKey || !model) {
+    console.log(chalk.hex('#FF0000')('\n  ╳  Configuração incompleta — use /config\n'));
     return;
   }
 
