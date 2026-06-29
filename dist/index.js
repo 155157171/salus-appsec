@@ -9,7 +9,7 @@ program
     .description('Salus — CLI de AppSec com IA (BYOK)\n' +
     'Ferramenta de revisão de código, análise de arquitetura e segurança.\n' +
     'Modo BYOK (Bring Your Own Key): use sua própria API Key OpenAI.')
-    .version('1.0.15')
+    .version('1.0.16')
     .addHelpText('after', '\nEXEMPLOS:\n' +
     '  $ salus                  Inicia o terminal interativo (REPL)\n' +
     '  $ salus config           Configura sua API Key OpenAI\n' +
